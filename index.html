@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<script src="../lib/d3.v5.min.js"></script>
+<style>
+
+path.link {
+  fill: none;
+  stroke: #666;
+  stroke-width: 1.5px;
+}
+
+circle {
+  fill: steelblue;
+  stroke: black;
+  stroke-width: 1px;
+}
+
+text {
+  fill: #000;
+  font: 13px sans-serif;
+  pointer-events: none;
+}
+
+</style>
+<body>
+<script>
+
+// get the data
+links =  [
+  {
+    "source": "Nelson and Phelps(1966)",
+    "target": "Endogenous Growth Theory",
+    "value": 1
+  },
+   {
+    "source": "Romer(1990a)",
+    "target": "Endogenous Growth Theory",
+    "value": 1
+  },
+  {
+    "source": "Rebelo(1991)",
+    "target": "Endogenous Growth Theory",
+    "value": 1
+  },
+  {
+    "source": "Romer(1990a)",
+    "target": "Rebelo(1991)",
+    "value": 0
+  },
+  {
+    "source": "Romer(1990a)",
+    "target": "Romer(1990b)",
+    "value": 0
+  },
+  {
+    "source": "Romer(1990b)",
+    "target": "Endogenous Growth (empirical)",
+    "value": 1
+  },
+  {
+    "source": "Barro(1991)",
+    "target": "Endogenous Growth (empirical)",
+    "value": 1
+  },
+   {
+    "source": "Mankiw et al. (1992)",
+    "target": "Endogenous Growth (empirical)",
+    "value": 1
+  },
+  {
+    "source": "Levine and Renelt (1992)",
+    "target": "Endogenous Growth (empirical)",
+    "value": 1
+  },
+  {
+    "source": "Romer(1990b)",
+    "target": "Barro(1991)",
+    "value": 0
+  },
+  {
+    "source": "Mankiw et al. (1992)",
+    "target": "Romer(1990b)",
+    "value": 0
+  },
+  {
+    "source": "Hitt et al. (2001)",
+    "target": "Strategy and management",
+    "value": 1
+  },
+  {
+    "source": "Hillman (2003)",
+    "target": "Strategy and management",
+    "value": 1
+  },
+  {
+    "source": "Bierman & Gely(1995)",
+    "target": "Strategy and management",
+    "value": 1
+  },
+  {
+    "source": "Hitt et al. (2001)",
+    "target": "Bierman & Gely(1995)",
+    "value": 0
+  },
+
+  {
+    "source": "Doong et al. (2011)",
+    "target": "Strategy and management",
+    "value": 1
+  },
+  {
+    "source": "Shrader and Siegel (2007)",
+    "target": "Strategy and management",
+    "value": 1
+  },
+  {
+    "source": "Grant (1996)",
+    "target": "Labor Economics",
+    "value": 1
+  },
+  {
+    "source": "Grant (1996)",
+    "target": "Strategy and management",
+    "value": 1
+  },
+  {
+    "source": "Hansen and Wernerfelt (1989)",
+    "target": "Strategy and management",
+    "value": 1
+  },
+  {
+    "source": "Addison (2005)",
+    "target": "Labor Economics",
+    "value": 1
+  },
+   {
+    "source": "Zeynep Ton (2009)",
+    "target": "Labor Economics",
+    "value": 1
+  },
+  {
+    "source": "Ittner and Larcker (1998)",
+    "target": "Labor Economics",
+    "value": 1
+  },
+  {
+    "source": "Anderson et al. (2004)",
+    "target": "Labor Economics",
+    "value": 1
+  },
+  {
+    "source": "Stierwald (2009)",
+    "target": "Labor Economics",
+    "value": 1
+  },
+  {
+    "source": "D'Aveni(1996)",
+    "target": "Labor Economics",
+    "value": 1
+  },
+   {
+    "source": "Lane & Lubatkin(1998)",
+    "target": "Industrial Psychology",
+    "value": 1
+  },
+   {
+    "source": "Polanyi(1967)",
+    "target": "Industrial Psychology",
+    "value": 1
+  },
+  {
+    "source": "Hitt et al. (2001)",
+    "target": "Polanyi(1967)",
+    "value": 0
+  },
+  {
+    "source": "Hitt et al. (2001)",
+    "target": "Grant (1996)",
+    "value": 0
+  },
+  {
+    "source": "Hitt et al. (2001)",
+    "target": "Lane & Lubatkin(1998)",
+    "value": 0
+  },
+  {
+    "source": "Hitt et al. (2001)",
+    "target": "Lane & Lubatkin(1998)",
+    "value": 0
+  }
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+];
+
+var nodes = {};
+
+// Compute the distinct nodes from the links.
+links.forEach(function(link) {
+    link.source = nodes[link.source] ||
+        (nodes[link.source] = {name: link.source, degree:0});
+    link.target = nodes[link.target] ||
+        (nodes[link.target] = {name: link.target, degree:0});
+    link.source["degree"]+=1;
+    link.target["degree"]+=1;;
+});
+
+var width = 1200,
+    height = 700;
+
+var force = d3.forceSimulation()
+    .nodes(d3.values(nodes))
+    .force("link", d3.forceLink(links).distance(100))
+    .force('center', d3.forceCenter(width / 2, height / 2))
+    .force("x", d3.forceX())
+    .force("y", d3.forceY())
+    .force("charge", d3.forceManyBody().strength(-600))
+    .alphaTarget(1)
+    .on("tick", tick);
+
+var svg = d3.select("body").append("svg")
+    .attr("width", width)
+    .attr("height", height);
+
+// add the links and the arrows
+
+var path = svg.append("g")
+.selectAll("path")
+.data(links)
+.enter()
+.append("path")
+.attr("class", function(d) { return "link " + d.type; })
+.style("stroke", function(d) { 
+	if (d.value==0) {
+		return "lightgreen";}
+	else {
+		return "lightblue";}})
+.style("stroke-width", function(d) { 
+	if (d.value==0) {
+		return "3";}
+	else {
+		return "4.5";} });
+
+// define the nodes
+var node = svg.selectAll(".node")
+    .data(force.nodes())
+  .enter().append("g")
+    .attr("class", "node")
+    .call(d3.drag()
+      .on("start", dragstarted)
+      .on("drag", dragged)
+      .on("end", dragended)
+      )
+    .on("dblclick",clickfunction);
+
+// add the nodes
+node.append("circle")
+    .attr("r", function(d){
+    	return (d.degree*3);})
+    .attr("fill",function(d){
+      if (d.degree2>=2){
+        return "lightpink";
+      }
+    });
+
+node.append("text")
+    .attr("dx", 8)
+    .attr("dy", ".35em")
+    .text(function(d) { return d.name })
+
+// add the curvy lines
+function tick() {
+    path.attr("d", function(d) {
+        var dx = d.target.x - d.source.x,
+            dy = d.target.y - d.source.y,
+            dr = Math.sqrt(dx * dx + dy * dy);
+        return "M" +
+            d.source.x + "," +
+            d.source.y + "A" +
+            dr + "," + dr + " 0 0,1 " +
+            d.target.x + "," +
+            d.target.y;
+    });
+
+    node
+        .attr("transform", function(d) {
+        return "translate(" + d.x + "," + d.y + ")"; })
+};
+
+function dragstarted(d) {
+      if (!d3.event.active) force.alphaTarget(0.3).restart();
+      d.fx = d.x;
+      d.fy = d.y;
+    };
+
+function dragged(d) {
+  d.fx = d3.event.x;
+  d.fy = d3.event.y;
+};
+
+function dragended(d) {
+  if (!d3.event.active) force.alphaTarget(0);
+  if (d.fixed == true){
+     d.fx = d.x;
+     d.fy = d.y;
+  }
+  else{
+    d.fx = null;
+    d.fy = null;
+  }
+
+};
+
+function clickfunction(d) {
+    if(d.fixed==false){
+    d3.select(this).select("circle").style("stroke","red").style('stroke-width',5);
+    d3.select(this).classed("fixed", d.fixed = true);
+    }
+    else{
+    d3.select(this).select("circle").style("stroke","black").style('stroke-width',1.5);
+    d3.select(this).classed("fixed", d.fixed = false);
+    }
+ };
+
+</script>
+</body>
+</html>
